@@ -1,6 +1,6 @@
 {
 	auto_https off
-	default_bind 127.0.0.1
+	default_bind 127.0.0.1 ::1
 }
 
 http://life-hub.localhost {
