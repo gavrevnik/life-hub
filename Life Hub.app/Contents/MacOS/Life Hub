@@ -5,12 +5,13 @@ setopt NO_BG_NICE
 SCRIPT_DIR="${0:A:h}"
 REPO_DIR="${SCRIPT_DIR}/../../.."
 REPO_DIR="${REPO_DIR:A}"
-URL="http://127.0.0.1:8790/"
-HEALTH_URL="${URL}api/health"
+PUBLIC_URL="http://life-hub.localhost/"
+INTERNAL_URL="http://127.0.0.1:8790/"
+HEALTH_URL="${INTERNAL_URL}api/health"
 RUNTIME_DIR="${REPO_DIR}/.runtime"
 LOG_FILE="${RUNTIME_DIR}/server.log"
 PID_FILE="${RUNTIME_DIR}/server.pid"
-EXPECTED_VERSION="0.2.0"
+EXPECTED_VERSION="0.3.0"
 
 hub_ready() {
   health_payload=$(/usr/bin/curl -fsS --max-time 1 "${HEALTH_URL}" 2>/dev/null || true)
@@ -18,7 +19,7 @@ hub_ready() {
 }
 
 if hub_ready; then
-  /usr/bin/open "${URL}"
+  /usr/bin/open "${PUBLIC_URL}"
   exit 0
 fi
 
@@ -47,7 +48,7 @@ print -r -- "$!" >"${PID_FILE}"
 
 for _ in {1..100}; do
   if hub_ready; then
-    /usr/bin/open "${URL}"
+    /usr/bin/open "${PUBLIC_URL}"
     exit 0
   fi
   /bin/sleep 0.1

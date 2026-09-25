@@ -29,7 +29,7 @@ class FakeClock:
 
 class HeartbeatTrackerTest(unittest.TestCase):
     def test_application_version_matches_launcher_contract(self) -> None:
-        self.assertEqual(APP_VERSION, "0.2.0")
+        self.assertEqual(APP_VERSION, "0.3.0")
 
     def test_heartbeat_resets_idle_timer_and_tracks_tabs(self) -> None:
         clock = FakeClock()
@@ -58,6 +58,11 @@ class HeartbeatTrackerTest(unittest.TestCase):
         )
         self.assertTrue(
             _heartbeat_origin_allowed("life-hub", "http://localhost:9876", 9876)
+        )
+        self.assertTrue(
+            _heartbeat_origin_allowed(
+                "activity-checker", "http://activity-checker.localhost"
+            )
         )
 
     @patch("app.server.os.kill")

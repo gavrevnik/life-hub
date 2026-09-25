@@ -23,8 +23,9 @@ STATIC_DIR = ROOT / "app" / "static"
 REGISTRY_PATH = ROOT / "registry.json"
 PID_FILE = ROOT / ".runtime" / "server.pid"
 APPLICATION_ID = "life-hub"
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
 DEFAULT_PORT = 8790
+PUBLIC_ORIGIN = "http://life-hub.localhost"
 DEFAULT_IDLE_TIMEOUT_SECONDS = 5 * 60
 HEARTBEAT_ACTIVE_SECONDS = 45
 SERVICE_ID = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -40,7 +41,16 @@ def load_registry() -> list[dict]:
         if not SERVICE_ID.fullmatch(service_id) or service_id in seen:
             raise ValueError(f"Invalid or duplicate service id: {service_id}")
         seen.add(service_id)
-        for key in ("name", "description", "repository", "url", "healthUrl", "launcher", "runtimePidFile"):
+        for key in (
+            "name",
+            "description",
+            "repository",
+            "url",
+            "directUrl",
+            "healthUrl",
+            "launcher",
+            "runtimePidFile",
+        ):
             if not str(service.get(key) or "").strip():
                 raise ValueError(f"{service_id}: missing {key}")
         if not isinstance(service.get("stopWhenBrowserIdle"), bool):
@@ -296,9 +306,13 @@ def _heartbeat_origin_allowed(
         return origin in {
             f"http://127.0.0.1:{hub_port}",
             f"http://localhost:{hub_port}",
+            PUBLIC_ORIGIN,
         }
     service = next((item for item in load_registry() if item["id"] == service_id), None)
-    return service is not None and origin == _url_origin(service["url"])
+    return service is not None and origin in {
+        _url_origin(service["url"]),
+        _url_origin(service["directUrl"]),
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -325,6 +339,7 @@ class Handler(BaseHTTPRequestHandler):
             None,
             f"http://127.0.0.1:{self.hub_port}",
             f"http://localhost:{self.hub_port}",
+            PUBLIC_ORIGIN,
         }
 
     def send_json(

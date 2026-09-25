@@ -1,0 +1,39 @@
+{
+	auto_https off
+	default_bind 127.0.0.1
+}
+
+http://life-hub.localhost {
+	reverse_proxy 127.0.0.1:8790 {
+		header_up Host 127.0.0.1:8790
+		header_up Origin http://127.0.0.1:8790
+	}
+}
+
+http://activity-checker.localhost {
+	reverse_proxy 127.0.0.1:4318 {
+		header_up Host 127.0.0.1:4318
+		header_up Origin http://127.0.0.1:4318
+	}
+}
+
+http://jobs-checker.localhost {
+	reverse_proxy 127.0.0.1:4317 {
+		header_up Host 127.0.0.1:4317
+		header_up Origin http://127.0.0.1:4317
+	}
+}
+
+http://voice-translator.localhost {
+	reverse_proxy 127.0.0.1:5173 {
+		header_up Host 127.0.0.1:5173
+		header_up Origin http://127.0.0.1:5173
+	}
+}
+
+http://content-checker.localhost {
+	reverse_proxy 127.0.0.1:8765 {
+		header_up Host 127.0.0.1:8765
+		header_up Origin http://127.0.0.1:8765
+	}
+}
