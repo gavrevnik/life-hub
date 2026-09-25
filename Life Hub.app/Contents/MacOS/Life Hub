@@ -10,10 +10,11 @@ HEALTH_URL="${URL}api/health"
 RUNTIME_DIR="${REPO_DIR}/.runtime"
 LOG_FILE="${RUNTIME_DIR}/server.log"
 PID_FILE="${RUNTIME_DIR}/server.pid"
+EXPECTED_VERSION="0.2.0"
 
 hub_ready() {
-  /usr/bin/curl -fsS --max-time 1 "${HEALTH_URL}" 2>/dev/null |
-    /usr/bin/grep -q '"application": "life-hub"'
+  health_payload=$(/usr/bin/curl -fsS --max-time 1 "${HEALTH_URL}" 2>/dev/null || true)
+  [[ "${health_payload}" == *'"application": "life-hub"'* && "${health_payload}" == *'"version": "'"${EXPECTED_VERSION}"'"'* ]]
 }
 
 if hub_ready; then
@@ -22,8 +23,22 @@ if hub_ready; then
 fi
 
 if /usr/sbin/lsof -nP -iTCP:8790 -sTCP:LISTEN >/dev/null 2>&1; then
-  /usr/bin/osascript -e 'display alert "Life Hub" message "Порт 8790 занят другим процессом." as critical'
-  exit 1
+  listener_pid=$(/usr/sbin/lsof -tiTCP:8790 -sTCP:LISTEN 2>/dev/null | /usr/bin/head -n 1 || true)
+  listener_command=""
+  if [[ "${listener_pid}" == <-> ]]; then
+    listener_command=$(/bin/ps -p "${listener_pid}" -o command= 2>/dev/null || true)
+  fi
+  if [[ "${listener_command}" == *"${REPO_DIR}/app/server.py"* ]]; then
+    /bin/kill "${listener_pid}" 2>/dev/null || true
+    for _ in {1..50}; do
+      /bin/kill -0 "${listener_pid}" 2>/dev/null || break
+      /bin/sleep 0.1
+    done
+  fi
+  if /usr/sbin/lsof -nP -iTCP:8790 -sTCP:LISTEN >/dev/null 2>&1; then
+    /usr/bin/osascript -e 'display alert "Life Hub" message "Порт 8790 занят другим процессом или устаревший Life Hub не удалось остановить." as critical'
+    exit 1
+  fi
 fi
 
 /bin/mkdir -p "${RUNTIME_DIR}"

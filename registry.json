@@ -11,7 +11,9 @@
     "healthExpected": {
       "app": "activity-checker"
     },
-    "launcher": "../activity-checker/Activity Checker.app"
+    "launcher": "../activity-checker/Activity Checker.app",
+    "runtimePidFile": "../activity-checker/.runtime/web.pid",
+    "stopWhenBrowserIdle": true
   },
   {
     "id": "jobs-checker",
@@ -25,7 +27,9 @@
     "healthExpected": {
       "application": "scout-local"
     },
-    "launcher": "../jobs-checker/Scout.app"
+    "launcher": "../jobs-checker/Scout.app",
+    "runtimePidFile": "../jobs-checker/.runtime/web.pid",
+    "stopWhenBrowserIdle": true
   },
   {
     "id": "voice-translator",
@@ -39,7 +43,9 @@
     "healthExpected": {
       "application": "voice-translator"
     },
-    "launcher": "../voice-translator/Say it.app"
+    "launcher": "../voice-translator/Say it.app",
+    "runtimePidFile": "../voice-translator/.runtime/web.pid",
+    "stopWhenBrowserIdle": true
   },
   {
     "id": "content-checker",
@@ -53,6 +59,8 @@
     "healthExpected": {
       "application": "whats-new-checker"
     },
-    "launcher": "../content-checker/Whats New Checker.app"
+    "launcher": "../content-checker/Whats New Checker.app",
+    "runtimePidFile": "../content-checker/.runtime/server.pid",
+    "stopWhenBrowserIdle": true
   }
 ]

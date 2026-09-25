@@ -13,6 +13,7 @@
         <div class="eyebrow">PERSONAL SERVICE SYSTEM</div>
         <h1>Life Hub</h1>
         <p>Одна точка входа в локальные инструменты.</p>
+        <p class="idle-note">После закрытия всех вкладок сервисы автоматически остановятся через 5 минут.</p>
       </header>
       <section class="summary" aria-live="polite">
         <span id="summary">Проверяем сервисы…</span>
@@ -30,10 +31,12 @@
         <p class="description"></p>
         <div class="actions">
           <button class="launch" type="button">Открыть</button>
+          <button class="stop" type="button">Остановить</button>
           <a class="github" target="_blank" rel="noreferrer">GitHub</a>
         </div>
       </article>
     </template>
+    <script src="/heartbeat.js" data-life-hub-service="life-hub" defer></script>
     <script src="/app.js" defer></script>
   </body>
 </html>

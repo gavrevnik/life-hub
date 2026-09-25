@@ -8,6 +8,7 @@ function renderService(service) {
   const card = fragment.querySelector(".card");
   const status = fragment.querySelector(".status");
   const launch = fragment.querySelector(".launch");
+  const stop = fragment.querySelector(".stop");
   fragment.querySelector(".icon").textContent = service.icon;
   fragment.querySelector("h2").textContent = service.name;
   fragment.querySelector(".description").textContent = service.description;
@@ -18,6 +19,11 @@ function renderService(service) {
   if (!service.githubUrl) github.hidden = true;
   launch.disabled = !service.launcherAvailable;
   launch.textContent = service.running ? "Перейти" : "Запустить";
+  stop.hidden = !service.running;
+  stop.disabled = service.running && !service.stoppable;
+  if (stop.disabled) {
+    stop.title = "Сервис запущен без проверяемого PID-файла";
+  }
   launch.addEventListener("click", async () => {
     if (service.running) {
       window.open(service.url, "_blank", "noopener");
@@ -36,6 +42,24 @@ function renderService(service) {
     } catch (error) {
       launch.disabled = false;
       launch.textContent = "Повторить";
+      card.classList.add("error");
+      card.title = error.message;
+    }
+  });
+  stop.addEventListener("click", async () => {
+    stop.disabled = true;
+    stop.textContent = "Останавливаем…";
+    try {
+      const response = await fetch(
+        "/api/services/" + encodeURIComponent(service.id) + "/stop",
+        { method: "POST" },
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Не удалось остановить сервис");
+      await loadServices();
+    } catch (error) {
+      stop.disabled = false;
+      stop.textContent = "Повторить";
       card.classList.add("error");
       card.title = error.message;
     }

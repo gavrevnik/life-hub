@@ -23,6 +23,8 @@ class RegistryTest(unittest.TestCase):
             self.assertEqual(urlparse(service["healthUrl"]).hostname, "127.0.0.1")
             self.assertTrue(resolve_workspace_path(service["repository"]).is_dir())
             self.assertTrue(resolve_workspace_path(service["launcher"]).is_dir())
+            self.assertEqual(resolve_workspace_path(service["runtimePidFile"]).suffix, ".pid")
+            self.assertIsInstance(service["stopWhenBrowserIdle"], bool)
 
 
 if __name__ == "__main__":
