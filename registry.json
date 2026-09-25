@@ -1,0 +1,58 @@
+[
+  {
+    "id": "activity-checker",
+    "name": "Activity Checker",
+    "icon": "✦",
+    "description": "Поиск локальных событий, мест и активностей.",
+    "repository": "../activity-checker",
+    "githubUrl": "https://github.com/gavrevnik/activity-checker",
+    "url": "http://127.0.0.1:4318/",
+    "healthUrl": "http://127.0.0.1:4318/api/health",
+    "healthExpected": {
+      "app": "activity-checker"
+    },
+    "launcher": "../activity-checker/Activity Checker.app"
+  },
+  {
+    "id": "jobs-checker",
+    "name": "Jobs Checker",
+    "icon": "⌁",
+    "description": "Личная воронка вакансий и поиск подходящих ролей.",
+    "repository": "../jobs-checker",
+    "githubUrl": "https://github.com/gavrevnik/jobs-checker",
+    "url": "http://127.0.0.1:4317/",
+    "healthUrl": "http://127.0.0.1:4317/api/health",
+    "healthExpected": {
+      "application": "scout-local"
+    },
+    "launcher": "../jobs-checker/Scout.app"
+  },
+  {
+    "id": "voice-translator",
+    "name": "Voice Translator",
+    "icon": "◉",
+    "description": "Голосовой переводчик для браузера и Android.",
+    "repository": "../voice-translator",
+    "githubUrl": "https://github.com/gavrevnik/voice-translator",
+    "url": "http://127.0.0.1:5173/",
+    "healthUrl": "http://127.0.0.1:8787/api/status",
+    "healthExpected": {
+      "application": "voice-translator"
+    },
+    "launcher": "../voice-translator/Say it.app"
+  },
+  {
+    "id": "content-checker",
+    "name": "Content Checker",
+    "icon": "▣",
+    "description": "Фильмы, музыка и персональные рекомендации.",
+    "repository": "../content-checker",
+    "githubUrl": "https://github.com/gavrevnik/content-checker",
+    "url": "http://127.0.0.1:8765/",
+    "healthUrl": "http://127.0.0.1:8765/api/health",
+    "healthExpected": {
+      "application": "whats-new-checker"
+    },
+    "launcher": "../content-checker/Whats New Checker.app"
+  }
+]

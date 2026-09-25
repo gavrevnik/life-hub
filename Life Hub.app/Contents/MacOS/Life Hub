@@ -1,0 +1,42 @@
+#!/bin/zsh
+set -eu
+setopt NO_BG_NICE
+
+SCRIPT_DIR="${0:A:h}"
+REPO_DIR="${SCRIPT_DIR}/../../.."
+REPO_DIR="${REPO_DIR:A}"
+URL="http://127.0.0.1:8790/"
+HEALTH_URL="${URL}api/health"
+RUNTIME_DIR="${REPO_DIR}/.runtime"
+LOG_FILE="${RUNTIME_DIR}/server.log"
+PID_FILE="${RUNTIME_DIR}/server.pid"
+
+hub_ready() {
+  /usr/bin/curl -fsS --max-time 1 "${HEALTH_URL}" 2>/dev/null |
+    /usr/bin/grep -q '"application": "life-hub"'
+}
+
+if hub_ready; then
+  /usr/bin/open "${URL}"
+  exit 0
+fi
+
+if /usr/sbin/lsof -nP -iTCP:8790 -sTCP:LISTEN >/dev/null 2>&1; then
+  /usr/bin/osascript -e 'display alert "Life Hub" message "Порт 8790 занят другим процессом." as critical'
+  exit 1
+fi
+
+/bin/mkdir -p "${RUNTIME_DIR}"
+/usr/bin/nohup /usr/bin/python3 "${REPO_DIR}/app/server.py" >>"${LOG_FILE}" 2>&1 </dev/null &
+print -r -- "$!" >"${PID_FILE}"
+
+for _ in {1..100}; do
+  if hub_ready; then
+    /usr/bin/open "${URL}"
+    exit 0
+  fi
+  /bin/sleep 0.1
+done
+
+/usr/bin/osascript -e 'display alert "Life Hub" message "Не удалось запустить хаб. Подробности: .runtime/server.log" as critical'
+exit 1
