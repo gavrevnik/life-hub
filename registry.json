@@ -17,7 +17,7 @@
   },
   {
     "id": "jobs-checker",
-    "name": "Jobs Checker",
+    "name": "Поиск работы",
     "icon": "⌁",
     "description": "Личная воронка вакансий и поиск подходящих ролей.",
     "repository": "../jobs-checker",

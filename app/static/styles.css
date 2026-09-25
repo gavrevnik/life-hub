@@ -22,32 +22,46 @@ main {
   padding: 72px 0 96px;
 }
 
-header { max-width: 680px; }
-
-.eyebrow {
-  color: #a6db75;
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.18em;
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px;
 }
 
 h1 {
-  margin: 12px 0 8px;
+  margin: 0;
   font-size: clamp(3.3rem, 10vw, 7rem);
   line-height: 0.9;
   letter-spacing: -0.07em;
 }
 
-header p {
-  color: #a7aa9f;
-  font-size: 1.15rem;
-}
-
 header .idle-note {
   max-width: 560px;
+  margin: 22px 0 0;
   color: #7f8378;
   font-size: 0.92rem;
 }
+
+.github-profile {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: #cfd2c7;
+  border: 1px solid #383c34;
+  border-radius: 50%;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.github-profile:hover {
+  color: #f5f6f2;
+  border-color: #60665a;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.github-profile svg { width: 21px; height: 21px; }
 
 .summary {
   display: flex;
@@ -75,7 +89,7 @@ button, a {
 }
 
 .card {
-  min-height: 280px;
+  min-height: 220px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -93,44 +107,8 @@ button, a {
 
 .card.error { border-color: #8f4b45; }
 
-.card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  color: #11130f;
-  background: #a6db75;
-  font-size: 1.45rem;
-  font-weight: 800;
-}
-
-.status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #85897e;
-  font-size: 0.78rem;
-}
-
-.status i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #666a61;
-}
-
-.status.online { color: #b8df94; }
-.status.online i { background: #9edf65; box-shadow: 0 0 12px rgba(158, 223, 101, 0.6); }
-
 .card h2 {
-  margin: 26px 0 10px;
+  margin: 0 0 10px;
   font-size: 1.4rem;
   letter-spacing: -0.025em;
 }
@@ -149,7 +127,7 @@ button, a {
   padding-top: 28px;
 }
 
-.launch, .stop, .github {
+.launch, .stop {
   min-height: 42px;
   display: inline-flex;
   align-items: center;
@@ -161,7 +139,7 @@ button, a {
 }
 
 .launch {
-  flex: 1;
+  flex: 1 1 110px;
   color: #151810;
   background: #a6db75;
   border: 0;
@@ -171,6 +149,7 @@ button, a {
 .launch:disabled { opacity: 0.45; cursor: wait; }
 
 .stop {
+  flex: 1 1 100px;
   color: #e8b6ae;
   background: transparent;
   border: 1px solid #6a403b;
@@ -180,13 +159,8 @@ button, a {
 .stop:disabled { opacity: 0.45; cursor: not-allowed; }
 .stop[hidden] { display: none; }
 
-.github {
-  flex-basis: 100%;
-  color: #d5d7cf;
-  border: 1px solid #42463c;
-}
-
 @media (max-width: 600px) {
   main { width: min(100% - 24px, 1120px); padding-top: 46px; }
+  .github-profile { width: 40px; height: 40px; }
   .summary { margin-top: 42px; }
 }

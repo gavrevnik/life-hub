@@ -6,17 +6,10 @@ const template = document.querySelector("#service-card");
 function renderService(service) {
   const fragment = template.content.cloneNode(true);
   const card = fragment.querySelector(".card");
-  const status = fragment.querySelector(".status");
   const launch = fragment.querySelector(".launch");
   const stop = fragment.querySelector(".stop");
-  fragment.querySelector(".icon").textContent = service.icon;
   fragment.querySelector("h2").textContent = service.name;
   fragment.querySelector(".description").textContent = service.description;
-  status.classList.toggle("online", service.running);
-  status.querySelector("span").textContent = service.running ? "Запущен" : "Остановлен";
-  const github = fragment.querySelector(".github");
-  github.href = service.githubUrl;
-  if (!service.githubUrl) github.hidden = true;
   launch.disabled = !service.launcherAvailable;
   launch.textContent = service.running ? "Перейти" : "Запустить";
   stop.hidden = !service.running;

@@ -25,7 +25,7 @@ python3 app/server.py
 Текущий registry:
 
 - Activity Checker
-- Jobs Checker
+- Поиск работы
 - Voice Translator
 - Content Checker
 
