@@ -11,7 +11,9 @@ HEALTH_URL="${INTERNAL_URL}api/health"
 RUNTIME_DIR="${REPO_DIR}/.runtime"
 LOG_FILE="${RUNTIME_DIR}/server.log"
 PID_FILE="${RUNTIME_DIR}/server.pid"
-EXPECTED_VERSION="0.3.0"
+EXPECTED_VERSION="0.4.0"
+LAUNCH_AGENT_LABEL="local.gavrevnik.life-hub"
+LAUNCH_AGENT_TARGET="gui/$(/usr/bin/id -u)/${LAUNCH_AGENT_LABEL}"
 
 hub_ready() {
   health_payload=$(/usr/bin/curl -fsS --max-time 1 "${HEALTH_URL}" 2>/dev/null || true)
@@ -21,6 +23,19 @@ hub_ready() {
 if hub_ready; then
   /usr/bin/open "${PUBLIC_URL}"
   exit 0
+fi
+
+if /bin/launchctl print "${LAUNCH_AGENT_TARGET}" >/dev/null 2>&1; then
+  /bin/launchctl kickstart -k "${LAUNCH_AGENT_TARGET}"
+  for _ in {1..100}; do
+    if hub_ready; then
+      /usr/bin/open "${PUBLIC_URL}"
+      exit 0
+    fi
+    /bin/sleep 0.1
+  done
+  /usr/bin/osascript -e 'display alert "Life Hub" message "Фоновый Life Hub не запустился. Подробности: .runtime/server.log" as critical'
+  exit 1
 fi
 
 if /usr/sbin/lsof -nP -iTCP:8790 -sTCP:LISTEN >/dev/null 2>&1; then

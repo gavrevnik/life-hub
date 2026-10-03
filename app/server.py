@@ -23,7 +23,7 @@ STATIC_DIR = ROOT / "app" / "static"
 REGISTRY_PATH = ROOT / "registry.json"
 PID_FILE = ROOT / ".runtime" / "server.pid"
 APPLICATION_ID = "life-hub"
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 DEFAULT_PORT = 8790
 PUBLIC_ORIGIN = "http://life-hub.localhost"
 DEFAULT_IDLE_TIMEOUT_SECONDS = 5 * 60
@@ -70,7 +70,7 @@ def resolve_workspace_path(relative_path: str) -> Path:
 def is_service_running(service: dict) -> bool:
     request = urllib.request.Request(
         service["healthUrl"],
-        headers={"User-Agent": "life-hub/0.1"},
+        headers={"User-Agent": f"life-hub/{APP_VERSION}"},
     )
     try:
         with urllib.request.urlopen(request, timeout=0.6) as response:
@@ -103,6 +103,46 @@ def _service_pid(service: dict) -> int | None:
         return None
     pid = int(value)
     return pid if pid > 1 and _process_exists(pid) else None
+
+
+def _listener_pids(service: dict) -> list[int]:
+    """Return local processes listening on the service's declared direct URL."""
+    try:
+        parsed = urlparse(service["directUrl"])
+        port = parsed.port
+    except (KeyError, TypeError, ValueError):
+        return []
+    if parsed.scheme not in {"http", "https"} or parsed.hostname not in {
+        "127.0.0.1",
+        "localhost",
+        "::1",
+    }:
+        return []
+    if port is None:
+        port = 443 if parsed.scheme == "https" else 80
+    try:
+        result = subprocess.run(
+            [
+                "/usr/sbin/lsof",
+                "-nP",
+                f"-iTCP:{port}",
+                "-sTCP:LISTEN",
+                "-t",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    return sorted(
+        {
+            int(line)
+            for line in result.stdout.splitlines()
+            if line.isdigit() and int(line) > 1
+        }
+    )
 
 
 def _process_command(pid: int) -> str:
@@ -151,6 +191,24 @@ def _pid_belongs_to_service(pid: int, service: dict) -> bool:
     return str(repository) in _process_command(pid)
 
 
+def _verified_service_pid(service: dict) -> int | None:
+    """Resolve a service PID without ever trusting a port match on its own."""
+    tracked_pid = _service_pid(service)
+    if tracked_pid is not None and _pid_belongs_to_service(tracked_pid, service):
+        return tracked_pid
+    for pid in _listener_pids(service):
+        if not _process_exists(pid) or not _pid_belongs_to_service(pid, service):
+            continue
+        pid_file = resolve_workspace_path(service["runtimePidFile"])
+        try:
+            pid_file.parent.mkdir(parents=True, exist_ok=True)
+            pid_file.write_text(str(pid), encoding="utf-8")
+        except OSError:
+            pass
+        return pid
+    return None
+
+
 def _descendant_pids(root_pid: int) -> list[int]:
     try:
         result = subprocess.run(
@@ -180,8 +238,11 @@ def _descendant_pids(root_pid: int) -> list[int]:
 
 def stop_service(service: dict, timeout: float = 5.0) -> bool:
     pid_file = resolve_workspace_path(service["runtimePidFile"])
-    pid = _service_pid(service)
+    tracked_pid = _service_pid(service)
+    pid = _verified_service_pid(service)
     if pid is None:
+        if tracked_pid is not None:
+            raise RuntimeError("PID-файл указывает на посторонний процесс; остановка отменена")
         if not is_service_running(service):
             try:
                 pid_file.unlink()
@@ -189,9 +250,6 @@ def stop_service(service: dict, timeout: float = 5.0) -> bool:
                 pass
             return False
         raise RuntimeError("Сервис запущен без проверяемого PID-файла")
-    if not _pid_belongs_to_service(pid, service):
-        raise RuntimeError("PID-файл указывает на посторонний процесс; остановка отменена")
-
     descendants = _descendant_pids(pid)
     targets = [pid, *descendants]
     for target in targets:
@@ -249,6 +307,22 @@ class HeartbeatTracker:
             )
 
 
+class IdleCleanupPolicy:
+    """Run idle cleanup once, then re-arm after browser activity resumes."""
+
+    def __init__(self) -> None:
+        self._cleaned_up = False
+
+    def should_cleanup(self, idle_seconds: float, timeout_seconds: int) -> bool:
+        if idle_seconds < timeout_seconds:
+            self._cleaned_up = False
+            return False
+        if self._cleaned_up:
+            return False
+        self._cleaned_up = True
+        return True
+
+
 def public_service(service: dict) -> dict:
     running = is_service_running(service)
     return {
@@ -259,7 +333,7 @@ def public_service(service: dict) -> dict:
         "githubUrl": service.get("githubUrl", ""),
         "url": service["url"],
         "running": running,
-        "stoppable": running and _service_pid(service) is not None,
+        "stoppable": running and _verified_service_pid(service) is not None,
         "stopWhenBrowserIdle": service["stopWhenBrowserIdle"],
         "repositoryAvailable": resolve_workspace_path(service["repository"]).is_dir(),
         "launcherAvailable": resolve_workspace_path(service["launcher"]).is_dir(),
@@ -316,7 +390,7 @@ def _heartbeat_origin_allowed(
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "LifeHub/0.2"
+    server_version = "LifeHub/0.4"
 
     @property
     def hub_port(self) -> int:
@@ -483,7 +557,7 @@ def main() -> None:
                 "LIFE_HUB_IDLE_TIMEOUT_SECONDS", DEFAULT_IDLE_TIMEOUT_SECONDS
             )
         ),
-        help="Stop opted-in services and the hub after this many seconds without browser heartbeats",
+        help="Stop opted-in services after this many seconds without browser heartbeats",
     )
     args = parser.parse_args()
     if args.idle_timeout < 1:
@@ -493,15 +567,18 @@ def main() -> None:
     server.heartbeat_tracker = HeartbeatTracker()
     server.idle_timeout_seconds = args.idle_timeout
     lifecycle_stop = threading.Event()
+    idle_cleanup_policy = IdleCleanupPolicy()
+    PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    PID_FILE.write_text(str(os.getpid()), encoding="utf-8")
 
     def monitor_browser_idle() -> None:
         while not lifecycle_stop.wait(1):
-            if server.heartbeat_tracker.idle_seconds() < args.idle_timeout:
+            if not idle_cleanup_policy.should_cleanup(
+                server.heartbeat_tracker.idle_seconds(), args.idle_timeout
+            ):
                 continue
             print("[life-hub] Browser idle timeout reached; stopping services")
             stop_idle_services()
-            server.shutdown()
-            return
 
     monitor = threading.Thread(
         target=monitor_browser_idle,

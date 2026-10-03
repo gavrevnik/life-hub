@@ -18,18 +18,18 @@
   },
   {
     "id": "jobs-checker",
-    "name": "Поиск работы",
+    "name": "Jobs checker",
     "icon": "⌁",
     "description": "Личная воронка вакансий и поиск подходящих ролей.",
     "repository": "../jobs-checker",
-    "githubUrl": "https://github.com/gavrevnik/jobs-checker",
+    "githubUrl": "https://github.com/gavrevnik/Jobs-checker",
     "url": "http://jobs-checker.localhost/",
     "directUrl": "http://127.0.0.1:4317/",
     "healthUrl": "http://127.0.0.1:4317/api/health",
     "healthExpected": {
-      "application": "scout-local"
+      "application": "jobs-checker"
     },
-    "launcher": "../jobs-checker/Scout.app",
+    "launcher": "../jobs-checker/Jobs checker.app",
     "runtimePidFile": "../jobs-checker/.runtime/web.pid",
     "stopWhenBrowserIdle": true
   },
